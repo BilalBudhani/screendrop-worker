@@ -43,7 +43,7 @@ export const Route = createFileRoute("/api/upload/multipart")({
               headers.get("x-social-enabled") || "",
             ),
           };
-          const id = crypto.randomUUID();
+          const id = crypto.randomUUID().split("-")[0];
           const key = `uploads/${id}/${filename}`;
           const upload = await env.BUCKET.createMultipartUpload(key, {
             httpMetadata: { contentType },
