@@ -187,6 +187,10 @@ All API routes are CORS-enabled. Routes marked with a lock require a Bearer toke
 | `GET`    | `/api/ping`               | Bearer | Connection health check (returns `version`)                        |
 | `POST`   | `/api/upload`             | Bearer | Multipart file upload                                              |
 | `PUT`    | `/api/upload`             | Bearer | Streaming upload (raw bytes, metadata via headers)                 |
+| `POST`   | `/api/upload/multipart`   | Bearer | Start an R2 multipart upload using the same metadata headers        |
+| `PUT`    | `/api/upload/multipart/:id` | Bearer | Upload a part; query: `key`, `uploadId`, `partNumber`              |
+| `POST`   | `/api/upload/multipart/:id` | Bearer | Complete with JSON `{ key, uploadId, parts: [{ partNumber, etag }] }` |
+| `DELETE` | `/api/upload/multipart/:id` | Bearer | Abort unfinished parts; query: `key`, `uploadId`                  |
 | `POST`   | `/api/register`           | Bearer | Register metadata for a file already uploaded to R2                |
 | `POST`   | `/api/assets/:id`         | Bearer | Attach sidecars to an upload: poster, transcript, storyboard, title |
 | `DELETE` | `/api/upload/:id`         | Bearer | Delete an upload permanently: R2 files, comments, likes, view events |
@@ -241,6 +245,8 @@ curl -X PUT https://your-worker.workers.dev/api/upload \
 ```
 
 `X-Title` and `X-Social-Enabled` are both optional, with the same defaults as the multipart form above.
+
+For large recordings, start a multipart upload to receive `{ id, key, uploadId }`, send consecutive 16 MiB parts, then complete to receive the usual share URL. The last part may be smaller. Metadata is saved at initiation; the share is created only after R2 has assembled the file. Completion can be repeated after a lost response. Existing single-request uploads continue to work, so deploy the Worker update before the app update.
 
 ### Response
 
